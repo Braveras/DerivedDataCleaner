@@ -23,14 +23,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let fm = FileManager.default
 
         guard fm.fileExists(atPath: path) else {
-            notify(title: "DerivedData", body: "Already empty")
+            flashIcon(symbol: "checkmark.circle.fill")
+            statusItem.button?.toolTip = "DerivedData already empty"
             return
         }
 
         let sizeKB = diskUsageKB(at: path)
         try? fm.removeItem(at: url)
         try? fm.createDirectory(at: url, withIntermediateDirectories: true)
-        notify(title: "DerivedData Cleared", body: formatSize(kb: sizeKB))
+
+        let sizeStr = formatSize(kb: sizeKB)
+        flashIcon(symbol: "checkmark.circle.fill")
+        statusItem.button?.toolTip = "Cleared: \(sizeStr)"
+        sendNotification(title: "DerivedData Cleared", body: sizeStr)
+    }
+
+    private func flashIcon(symbol: String) {
+        guard let button = statusItem.button else { return }
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            button.image = NSImage(systemSymbolName: "trash.fill", accessibilityDescription: "Clear Xcode DerivedData")
+            self?.statusItem.button?.toolTip = nil
+        }
     }
 
     private func diskUsageKB(at path: String) -> Int64 {
@@ -48,19 +62,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func formatSize(kb: Int64) -> String {
         let mb = Double(kb) / 1024
-        if mb >= 1024 {
-            return String(format: "%.1f GB freed", mb / 1024)
-        }
+        if mb >= 1024 { return String(format: "%.1f GB freed", mb / 1024) }
         return String(format: "%.0f MB freed", mb)
     }
 
-    private func notify(title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-        UNUserNotificationCenter.current().add(
-            UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        )
+    private func sendNotification(title: String, body: String) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized else { return }
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.body = body
+            content.sound = .default
+            UNUserNotificationCenter.current().add(
+                UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+            )
+        }
     }
 }
