@@ -1,0 +1,40 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project DerivedDataCleaner.xcodeproj \
+            -scheme DerivedDataCleaner \
+            -configuration Release \
+            -derivedDataPath "${{ github.workspace }}/build" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package
+        run: |
+          APP="${{ github.workspace }}/build/Build/Products/Release/DerivedDataCleaner.app"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" DerivedDataCleaner.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DerivedDataCleaner.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
