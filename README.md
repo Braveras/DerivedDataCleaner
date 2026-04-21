@@ -1,8 +1,17 @@
 # DerivedDataCleaner
 
-Menu bar app for macOS. Click the trash icon → DerivedData deleted → system notification with MB freed.
+Menu bar app for macOS. Click the trash icon → DerivedData deleted → icon flashes ✓ with size freed.
 
 ## Install
+
+### Homebrew (recommended)
+
+```bash
+brew tap braveras/tap
+brew install --cask deriveddatacleaner
+```
+
+### Manual
 
 Download `DerivedDataCleaner.zip` from [Releases](../../releases), unzip, drag to `/Applications`.
 
@@ -14,7 +23,7 @@ Or run: `xattr -d com.apple.quarantine DerivedDataCleaner.app`
 Requires Xcode 15+ and macOS 13+.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/DerivedDataCleaner
+git clone https://github.com/Braveras/DerivedDataCleaner
 open DerivedDataCleaner.xcodeproj
 ```
 
@@ -27,7 +36,11 @@ git tag v1.x.0
 git push origin v1.x.0
 ```
 
-GitHub Actions builds and publishes the release automatically.
+GitHub Actions builds, publishes the release, and updates the Homebrew tap automatically.
+
+> **Note:** Auto-update of Homebrew tap requires `HOMEBREW_TAP_TOKEN` secret in repo settings.  
+> Create at GitHub → Settings → Developer settings → Fine-grained tokens  
+> Permissions needed: **Contents: Read and Write** on `Braveras/homebrew-tap` only.
 
 ---
 

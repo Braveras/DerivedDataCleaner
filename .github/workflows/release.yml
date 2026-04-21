@@ -40,3 +40,36 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Homebrew Tap
+        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          SHA256=$(shasum -a 256 DerivedDataCleaner.zip | awk '{print $1}')
+
+          CASK=$(cat <<CASKEOF
+cask "deriveddatacleaner" do
+  version "$VERSION"
+  sha256 "$SHA256"
+
+  url "https://github.com/Braveras/DerivedDataCleaner/releases/download/v#{version}/DerivedDataCleaner.zip"
+  name "DerivedDataCleaner"
+  desc "One-click menu bar app to clear Xcode DerivedData"
+  homepage "https://github.com/Braveras/DerivedDataCleaner"
+
+  app "DerivedDataCleaner.app"
+end
+CASKEOF
+)
+
+          FILE_SHA=$(gh api /repos/Braveras/homebrew-tap/contents/Casks/deriveddatacleaner.rb --jq .sha)
+          CONTENT=$(echo "$CASK" | base64)
+
+          gh api \
+            --method PUT \
+            /repos/Braveras/homebrew-tap/contents/Casks/deriveddatacleaner.rb \
+            -f message="chore: bump deriveddatacleaner to $VERSION" \
+            -f content="$CONTENT" \
+            -f sha="$FILE_SHA"
