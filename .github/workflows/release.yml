@@ -42,10 +42,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update Homebrew Tap
-        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
+          [ -z "$GH_TOKEN" ] && echo "HOMEBREW_TAP_TOKEN not set, skipping" && exit 0
           VERSION="${GITHUB_REF_NAME#v}"
           SHA256=$(shasum -a 256 DerivedDataCleaner.zip | awk '{print $1}')
 
