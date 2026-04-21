@@ -5,6 +5,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Close any window SwiftUI Settings scene may restore
+        DispatchQueue.main.async {
+            NSApplication.shared.windows.forEach { $0.close() }
+        }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
         setupStatusItem()
     }
